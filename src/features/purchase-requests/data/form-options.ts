@@ -10,13 +10,16 @@ export const SMALL_PURCHASE_LIMIT = 3000
 export const URGENCY_THRESHOLD_DAYS = 3
 
 /**
- * Perfil-mock do requisitante. No produto, unidade e centro de custo são
- * buscados do perfil do usuário e podem ser ajustados (fonte: matriz Base-b).
+ * Perfil-mock do requisitante. No produto, unidade, centro de custo e natureza
+ * do objeto são buscados do perfil/histórico do usuário e podem ser ajustados
+ * (fonte: doc 03 — "podem ser preenchidos automaticamente: centro de custo,
+ * unidade, natureza do objeto").
  * ⚠️ Hipótese — a confirmar com o SESI (DEC-12).
  */
 export const mockRequesterProfile = {
   unit: 'Unidade Centro',
   costCenter: 'CC-1001',
+  objectNature: 'Material de escritório',
 } as const
 
 export const unitOptions = [

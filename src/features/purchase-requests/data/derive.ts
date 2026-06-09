@@ -157,10 +157,13 @@ export function getTimeline(req: PurchaseRequest): TimelineEvent[] {
   })
 
   if (req.status !== 'draft') {
+    // 1ª passagem do robô (BPMN: "Direct Buy: Analisar solicitação" → elegível?).
     add({
       at: req.createdAt,
-      actor: 'Motor de regras',
-      action: 'Validações executadas',
+      actor: 'Robô Direct Buy',
+      action: 'Análise de elegibilidade',
+      detail:
+        'Verificação automática de governança: limite, fornecedor, estoque, contrato e fracionamento.',
       kind: 'rules',
     })
   }
@@ -168,7 +171,7 @@ export function getTimeline(req: PurchaseRequest): TimelineEvent[] {
   if (req.blockReason && blockInfo[req.blockReason]) {
     add({
       at: req.updatedAt,
-      actor: 'Motor de regras',
+      actor: 'Robô Direct Buy',
       action: 'Resultado de conformidade',
       detail: blockInfo[req.blockReason].message,
       kind: 'rules',
@@ -199,16 +202,26 @@ export function getTimeline(req: PurchaseRequest): TimelineEvent[] {
       add({ at: req.updatedAt, actor: 'Gestor', action: 'Solicitação aprovada', kind: 'user' })
       break
     case 'queued_for_sap':
-      add({ at: req.updatedAt, actor: 'Sistema', action: 'Enfileirada para registro no SAP', kind: 'system' })
+      add({ at: req.updatedAt, actor: 'Sistema', action: 'Enfileirada para a janela da automação (2×/dia)', kind: 'system' })
       break
     case 'processing_sap':
+      // 2ª passagem do robô (BPMN: "Direct Buy: Analisar regras" → abrir pedido).
+      add({ at: req.updatedAt, actor: 'Robô Direct Buy', action: 'Análise de regras para abertura do pedido', kind: 'rules' })
       add({ at: req.updatedAt, actor: 'Integração SAP', action: 'Registrando no SAP', kind: 'sap' })
       break
     case 'integration_error':
-      add({ at: req.updatedAt, actor: 'Integração SAP', action: 'Erro no registro do pedido', kind: 'sap' })
+      // BPMN: "Há impedimentos para a abertura do pedido? Sim" → erro devolvido para correção.
+      add({ at: req.updatedAt, actor: 'Robô Direct Buy', action: 'Impedimento na abertura do pedido', detail: 'Regra de governança não atendida ao abrir o pedido — devolvido para correção.', kind: 'rules' })
       break
     case 'completed':
       add({ at: req.updatedAt, actor: 'Gestor', action: 'Solicitação aprovada', kind: 'user' })
+      add({
+        at: req.updatedAt,
+        actor: 'Robô Direct Buy',
+        action: 'Análise de regras para abertura do pedido',
+        detail: 'Sem impedimentos — pedido encaminhado ao SAP.',
+        kind: 'rules',
+      })
       add({
         at: req.updatedAt,
         actor: 'Integração SAP',
@@ -252,20 +265,20 @@ export function getSapState(req: PurchaseRequest): SapState {
         label: 'Registrando no SAP',
         tone: 'info',
         message:
-          'Janela da automação em andamento — registrando o pedido no SAP.',
+          'Janela da automação em andamento — o robô analisa as regras de abertura e registra o pedido no SAP.',
       }
     case 'integration_error':
       return {
         label: 'Erro no registro',
         tone: 'danger',
         message:
-          'O pedido não foi criado. Revise os dados ou solicite apoio de Compras/TI.',
+          'O robô identificou um impedimento ao abrir o pedido (regra de governança ou inconsistência). Revise os dados e reenvie; se persistir, acione Compras/TI.',
       }
     case 'approved':
       return {
         label: 'Aprovada',
         tone: 'info',
-        message: 'Autorizada — aguardando entrada na fila de automação.',
+        message: 'Autorizada — aguardando a próxima janela da automação (2×/dia).',
       }
     default:
       return {

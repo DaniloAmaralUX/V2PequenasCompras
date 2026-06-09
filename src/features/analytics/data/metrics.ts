@@ -38,6 +38,8 @@ export type Metrics = {
   attention: number
   /** Tempo médio entre criação e conclusão (dias) — proxy de SLA do piloto. */
   avgCycleDays: number
+  /** Bloqueios + impedimentos identificados pela automação (benchmarking: erros das automações). */
+  automationErrors: number
   periodStart: string
   periodEnd: string
   byStatus: StatusSlice[]
@@ -75,6 +77,10 @@ export function useMetrics(): Metrics {
   ).length
   const attention = requests.filter(
     (r) => r.conformity === 'attention' || r.conformity === 'blocked'
+  ).length
+  // Erros/bloqueios da automação (BPMN: bloqueio na elegibilidade + impedimento na abertura).
+  const automationErrors = requests.filter(
+    (r) => r.status === 'integration_error' || r.status === 'blocked'
   ).length
 
   const dates = requests.map((r) => r.createdAt.slice(0, 10)).sort()
@@ -145,6 +151,7 @@ export function useMetrics(): Metrics {
     awaiting,
     attention,
     avgCycleDays,
+    automationErrors,
     periodStart,
     periodEnd,
     byStatus,

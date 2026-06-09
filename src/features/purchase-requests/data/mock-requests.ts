@@ -314,8 +314,9 @@ export const mockRequests: PurchaseRequest[] = [
     supplierStatus: 'homologado',
     status: 'approved',
     conformity: 'ok',
-    ownerArea: 'Compras/Suprimentos',
+    // Recém-aprovada pelo gestor — já sob a automação, aguardando a janela 2×/dia.
+    ownerArea: 'Sistema',
     createdAt: '2026-06-06',
-    updatedAt: '2026-06-08',
+    updatedAt: '2026-06-09',
   },
 ]

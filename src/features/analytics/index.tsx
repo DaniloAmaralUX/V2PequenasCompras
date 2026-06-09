@@ -4,6 +4,7 @@ import {
   BarChart3,
   CircleCheck,
   Clock,
+  ShieldAlert,
   Timer,
   Wallet,
 } from 'lucide-react'
@@ -73,6 +74,12 @@ export function Analytics() {
       hint: 'Criação → pedido (concluídas)',
       icon: Timer,
     },
+    {
+      label: 'Bloqueios e erros',
+      value: String(m.automationErrors),
+      hint: 'Identificados pela automação',
+      icon: ShieldAlert,
+    },
   ]
 
   return (
@@ -96,7 +103,7 @@ export function Analytics() {
           </p>
         </div>
 
-        <div className='stagger-list grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
+        <div className='stagger-list grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'>
           {kpis.map((kpi) => {
             const Icon = kpi.icon
             return (

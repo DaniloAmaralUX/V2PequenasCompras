@@ -39,8 +39,8 @@ import { Main } from '@/components/layout/main'
 import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useRulesStore } from '@/features/admin/data/rules-store'
 import {
-  SMALL_PURCHASE_LIMIT,
   URGENCY_THRESHOLD_DAYS,
   mockRequesterProfile,
   objectNatureOptions,
@@ -100,7 +100,7 @@ export function NewRequestForm() {
       // Pré-preenchidos pelo perfil do requisitante (editáveis) — modelo Direct Buy.
       unit: mockRequesterProfile.unit,
       costCenter: mockRequesterProfile.costCenter,
-      objectNature: '',
+      objectNature: mockRequesterProfile.objectNature,
       desiredDate: '',
       urgency: 'media',
       urgencyJustification: '',
@@ -113,6 +113,7 @@ export function NewRequestForm() {
       supplierName: undefined,
       supplierStatus: undefined,
       quotes: [],
+      winningQuoteIndex: undefined,
       lowestPriceJustification: '',
       evidenceCount: 0,
     },
@@ -141,13 +142,17 @@ export function NewRequestForm() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [form])
 
+  // Regras vigentes (admin) — "as regras moram no sistema, não na memória" (doc 03).
+  const limit = useRulesStore((s) => s.values.small_purchase_limit)
+  const minQuotes = useRulesStore((s) => s.values.min_quotes)
+
   const items = form.watch('items')
   const total = (items ?? []).reduce(
     (sum, it) => sum + (Number(it?.quantity) || 0) * (Number(it?.unitValue) || 0),
     0
   )
   const estimated = form.watch('estimatedValue')
-  const overLimit = typeof estimated === 'number' && estimated > SMALL_PURCHASE_LIMIT
+  const overLimit = typeof estimated === 'number' && estimated > limit
   const supplierStatus = form.watch('supplierStatus')
   const supplierName = form.watch('supplierName')
   const desiredDate = form.watch('desiredDate') ?? ''
@@ -166,10 +171,65 @@ export function NewRequestForm() {
     }
   }, [autoUrgent, form])
 
+  // Fluxo de exceção (fornecedor não homologado): cotações, vencedor e gates.
+  const isException = supplierStatus === 'inexistente'
+  const quotes = form.watch('quotes') ?? []
+  const winningQuoteIndex = form.watch('winningQuoteIndex')
+  const evidenceCount = form.watch('evidenceCount') ?? 0
+
+  const quoteValues = quotes.map((q) =>
+    typeof q?.value === 'number' ? q.value : Number.NaN
+  )
+  const validQuoteValues = quoteValues.filter((v) => !Number.isNaN(v))
+  const lowestValue = validQuoteValues.length ? Math.min(...validQuoteValues) : null
+  const quoteAddCap = Math.max(3, minQuotes)
+
+  const winnerValue =
+    typeof winningQuoteIndex === 'number' ? quoteValues[winningQuoteIndex] : Number.NaN
+  const winnerNotLowest =
+    !Number.isNaN(winnerValue) && lowestValue !== null && winnerValue > lowestValue
+
+  // Vencedor default = menor preço. Enquanto o requisitante não "fixar" um vencedor
+  // manualmente, o default acompanha a cotação de menor valor (matriz Base-b/XLSX).
+  const winnerTouched = useRef(false)
+  const quotesSig = quotes
+    .map((q) => (typeof q?.value === 'number' ? q.value : ''))
+    .join('|')
+  useEffect(() => {
+    if (!isException || winnerTouched.current) return
+    const list = form.getValues('quotes') ?? []
+    let lowIdx = -1
+    let lowVal = Number.POSITIVE_INFINITY
+    list.forEach((q, i) => {
+      const v = typeof q?.value === 'number' ? q.value : Number.NaN
+      if (!Number.isNaN(v) && v < lowVal) {
+        lowVal = v
+        lowIdx = i
+      }
+    })
+    if (lowIdx >= 0 && lowIdx !== form.getValues('winningQuoteIndex')) {
+      form.setValue('winningQuoteIndex', lowIdx, { shouldDirty: false })
+    }
+  }, [isException, quotesSig, form])
+
+  // Gates do fluxo de exceção (quantidade mínima e vencedor vêm das regras do admin).
+  const quotesCountOk = !isException || quotes.length >= minQuotes
+  const winnerChosenOk = !isException || typeof winningQuoteIndex === 'number'
+  const evidenceNeeded = isException ? quotes.length : 0
+  const evidenceOk = evidenceCount >= evidenceNeeded
+
   const next = async () => {
     const fields = stepFields[step]
     if (fields.length && !(await form.trigger(fields))) return
     if (step === 0 && overLimit) return
+    if (step === 2) {
+      if (supplierStatus === 'bloqueado') return
+      if (isException) {
+        const ok = await form.trigger(['quotes', 'lowestPriceJustification'])
+        if (!quotesCountOk || !winnerChosenOk || !ok) return
+      }
+    }
+    if (step === 3 && isException && !evidenceOk) return
     if (step === STEPS.length - 2) await form.trigger()
     setStep((s) => Math.min(STEPS.length - 1, s + 1))
   }
@@ -297,6 +357,9 @@ export function NewRequestForm() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormDescription>
+                          Sugerida pelo seu perfil — pode ajustar.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -400,7 +463,7 @@ export function NewRequestForm() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Limite de pequenas compras: {formatBRL(SMALL_PURCHASE_LIMIT)}.
+                          Limite de pequenas compras: {formatBRL(limit)}.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -411,9 +474,15 @@ export function NewRequestForm() {
                       <ArrowUpRight className='size-4' />
                       <AlertTitle>Fora do fluxo de pequenas compras</AlertTitle>
                       <AlertDescription className='text-amber-900/90 dark:text-amber-200/90'>
-                        O valor ultrapassa o limite de{' '}
-                        {formatBRL(SMALL_PURCHASE_LIMIT)} e deve seguir pelo fluxo
-                        normal de compras. Seus dados foram preservados.
+                        <p>
+                          O valor ultrapassa o limite de {formatBRL(limit)} e não se
+                          enquadra como pequena compra. Seus dados foram preservados.
+                        </p>
+                        <p className='mt-1'>
+                          <span className='font-medium'>O que acontece agora:</span>{' '}
+                          a solicitação é encaminhada ao fluxo normal de compras (SAP),
+                          conduzido pela equipe de Compras.
+                        </p>
                       </AlertDescription>
                     </Alert>
                   )}
@@ -600,6 +669,29 @@ export function NewRequestForm() {
                         form.setValue('supplierStatus', sel.status, {
                           shouldDirty: true,
                         })
+                        // Recomeça acompanhando o menor preço ao trocar de fornecedor.
+                        winnerTouched.current = false
+                        if (sel.status === 'inexistente') {
+                          // Semeia uma linha de cotação para o requisitante começar.
+                          if (form.getValues('quotes').length === 0) {
+                            quotesFA.replace([
+                              {
+                                supplierName: '',
+                                value: undefined as unknown as number,
+                                collectedAt: '',
+                              },
+                            ])
+                          }
+                        } else {
+                          // Sai do fluxo de exceção: limpa cotações/vencedor/justificativa.
+                          quotesFA.replace([])
+                          form.setValue('winningQuoteIndex', undefined, {
+                            shouldDirty: true,
+                          })
+                          form.setValue('lowestPriceJustification', '', {
+                            shouldDirty: true,
+                          })
+                        }
                       }}
                     />
                   </FormItem>
@@ -660,87 +752,124 @@ export function NewRequestForm() {
                         <ArrowUpRight className='size-4' />
                         <AlertTitle>Fluxo de exceção — fornecedor não homologado</AlertTitle>
                         <AlertDescription className='text-amber-900/90 dark:text-amber-200/90'>
-                          Registre até 3 preços com evidência e data/hora de coleta.
-                          Hipótese (DEC-05/DEC-06): responsável e aprovação adicional a
-                          confirmar com o SESI.
+                          Registre os preços com evidência e data/hora de coleta
+                          (mínimo {minQuotes}). O vencedor é marcado no menor preço;
+                          escolher outro exige justificativa. Hipótese (DEC-05/DEC-06):
+                          responsável e aprovação adicional a confirmar com o SESI.
                         </AlertDescription>
                       </Alert>
 
-                      {quotesFA.fields.map((f, idx) => (
-                        <div
-                          key={f.id}
-                          className='grid grid-cols-12 gap-2 rounded-md border p-3'
-                        >
-                          <FormField
-                            control={form.control}
-                            name={`quotes.${idx}.supplierName`}
-                            render={({ field }) => (
-                              <FormItem className='col-span-12 sm:col-span-5'>
-                                <FormLabel className='text-xs'>Fornecedor/fonte</FormLabel>
-                                <FormControl>
-                                  <Input placeholder='Nome ou origem' {...field} />
-                                </FormControl>
-                              </FormItem>
+                      {quotesFA.fields.map((f, idx) => {
+                        const isLowest =
+                          lowestValue !== null && quoteValues[idx] === lowestValue
+                        return (
+                          <div
+                            key={f.id}
+                            className={cn(
+                              'space-y-2 rounded-md border p-3',
+                              winningQuoteIndex === idx &&
+                                'border-emerald-400 ring-1 ring-emerald-400/40'
                             )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`quotes.${idx}.value`}
-                            render={({ field }) => (
-                              <FormItem className='col-span-5 sm:col-span-3'>
-                                <FormLabel className='text-xs'>Valor (R$)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type='number'
-                                    min={0}
-                                    step='0.01'
-                                    name={field.name}
-                                    ref={field.ref}
-                                    onBlur={field.onBlur}
-                                    value={field.value ?? ''}
-                                    onChange={(e) =>
-                                      field.onChange(
-                                        e.target.value === ''
-                                          ? undefined
-                                          : e.target.valueAsNumber
-                                      )
-                                    }
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`quotes.${idx}.collectedAt`}
-                            render={({ field }) => (
-                              <FormItem className='col-span-6 sm:col-span-3'>
-                                <FormLabel className='text-xs'>Coleta</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type='datetime-local'
-                                    {...field}
-                                    value={field.value ?? ''}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <div className='col-span-1 flex items-end'>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => quotesFA.remove(idx)}
-                              aria-label='Remover cotação'
-                            >
-                              <Trash2 className='size-4' />
-                            </Button>
+                          >
+                            <div className='flex items-center justify-between gap-2'>
+                              <label className='flex items-center gap-2 text-xs font-medium'>
+                                <input
+                                  type='radio'
+                                  name='winningQuote'
+                                  className='size-4 accent-emerald-600'
+                                  checked={winningQuoteIndex === idx}
+                                  onChange={() => {
+                                    winnerTouched.current = true
+                                    form.setValue('winningQuoteIndex', idx, {
+                                      shouldDirty: true,
+                                      shouldValidate: true,
+                                    })
+                                  }}
+                                />
+                                Fornecedor vencedor
+                              </label>
+                              <div className='flex items-center gap-2'>
+                                {isLowest && (
+                                  <span className='rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'>
+                                    menor preço
+                                  </span>
+                                )}
+                                <Button
+                                  type='button'
+                                  variant='ghost'
+                                  size='icon'
+                                  onClick={() => quotesFA.remove(idx)}
+                                  aria-label='Remover cotação'
+                                >
+                                  <Trash2 className='size-4' />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className='grid grid-cols-12 gap-2'>
+                              <FormField
+                                control={form.control}
+                                name={`quotes.${idx}.supplierName`}
+                                render={({ field }) => (
+                                  <FormItem className='col-span-12 sm:col-span-5'>
+                                    <FormLabel className='text-xs'>Fornecedor/fonte</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder='Nome ou origem' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`quotes.${idx}.value`}
+                                render={({ field }) => (
+                                  <FormItem className='col-span-5 sm:col-span-3'>
+                                    <FormLabel className='text-xs'>Valor (R$)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type='number'
+                                        min={0}
+                                        step='0.01'
+                                        name={field.name}
+                                        ref={field.ref}
+                                        onBlur={field.onBlur}
+                                        value={field.value ?? ''}
+                                        onChange={(e) =>
+                                          field.onChange(
+                                            e.target.value === ''
+                                              ? undefined
+                                              : e.target.valueAsNumber
+                                          )
+                                        }
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name={`quotes.${idx}.collectedAt`}
+                                render={({ field }) => (
+                                  <FormItem className='col-span-7 sm:col-span-4'>
+                                    <FormLabel className='text-xs'>Coleta (data/hora)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type='datetime-local'
+                                        {...field}
+                                        value={field.value ?? ''}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
 
-                      {quotesFA.fields.length < 3 && (
+                      {quotesFA.fields.length < quoteAddCap && (
                         <Button
                           type='button'
                           variant='outline'
@@ -758,20 +887,36 @@ export function NewRequestForm() {
                         </Button>
                       )}
 
+                      {!quotesCountOk && (
+                        <p className='text-xs text-amber-700 dark:text-amber-400'>
+                          Registre ao menos {minQuotes} cotações para continuar (
+                          {quotes.length}/{minQuotes}).
+                        </p>
+                      )}
+
                       <FormField
                         control={form.control}
                         name='lowestPriceJustification'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
-                              Justificativa (se não escolher o menor preço)
+                              Justificativa da escolha
+                              {winnerNotLowest && ' (obrigatória)'}
                             </FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder='Obrigatória quando o fornecedor escolhido não for o de menor preço.'
+                                placeholder='Obrigatória quando o fornecedor vencedor não for o de menor preço.'
                                 {...field}
+                                value={field.value ?? ''}
                               />
                             </FormControl>
+                            {winnerNotLowest && (
+                              <FormDescription className='text-amber-700 dark:text-amber-400'>
+                                O vencedor selecionado não é o de menor preço —
+                                justifique a escolha.
+                              </FormDescription>
+                            )}
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -791,18 +936,29 @@ export function NewRequestForm() {
                     cotação informada.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className='space-y-3'>
                   <FormField
                     control={form.control}
                     name='evidenceCount'
                     render={({ field }) => (
                       <FormItem>
-                        <EvidenceUploader
-                          onCountChange={(n) => field.onChange(n)}
-                        />
+                        <EvidenceUploader onCountChange={(n) => field.onChange(n)} />
                       </FormItem>
                     )}
                   />
+                  {isException && (
+                    <p
+                      className={cn(
+                        'text-xs',
+                        evidenceOk
+                          ? 'text-muted-foreground'
+                          : 'text-amber-700 dark:text-amber-400'
+                      )}
+                    >
+                      Anexe ao menos uma evidência por cotação ({evidenceCount}/
+                      {evidenceNeeded}).
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -880,7 +1036,14 @@ export function NewRequestForm() {
                 <Button
                   type='button'
                   onClick={next}
-                  disabled={step === 0 && overLimit}
+                  disabled={
+                    (step === 0 && overLimit) ||
+                    (step === 2 && supplierStatus === 'bloqueado') ||
+                    (step === 2 &&
+                      isException &&
+                      (!quotesCountOk || !winnerChosenOk)) ||
+                    (step === 3 && isException && !evidenceOk)
+                  }
                 >
                   Continuar
                 </Button>

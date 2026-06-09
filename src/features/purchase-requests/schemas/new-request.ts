@@ -16,7 +16,8 @@ export type ItemForm = z.infer<typeof itemFormSchema>
 export const quoteFormSchema = z.object({
   supplierName: z.string().min(1, 'Informe o fornecedor ou a fonte.'),
   value: z.number({ message: 'Informe o valor.' }).nonnegative('Valor inválido.'),
-  collectedAt: z.string().optional(),
+  /** Data/hora da coleta — obrigatória no fluxo de exceção (fonte: doc 03). */
+  collectedAt: z.string().min(1, 'Informe a data/hora da coleta.'),
 })
 export type QuoteForm = z.infer<typeof quoteFormSchema>
 
@@ -42,6 +43,8 @@ export const newRequestSchema = z
     supplierName: z.string().optional(),
     supplierStatus: z.enum(supplierStatuses).optional(),
     quotes: z.array(quoteFormSchema),
+    /** Índice da cotação vencedora — default automático no menor preço (matriz Base-b/XLSX). */
+    winningQuoteIndex: z.number().optional(),
     lowestPriceJustification: z.string().optional(),
     // Etapa 4 — Evidências
     evidenceCount: z.number(),
@@ -57,6 +60,31 @@ export const newRequestSchema = z
         path: ['urgencyJustification'],
         message: 'Justifique a urgência (prazo curto).',
       })
+    }
+
+    // Fluxo de exceção: justificativa obrigatória quando o fornecedor vencedor
+    // não é o de menor preço (compliance — doc 03 / matriz Base-b).
+    if (data.supplierStatus === 'inexistente') {
+      const values = data.quotes
+        .map((q) => q.value)
+        .filter((v): v is number => typeof v === 'number')
+      if (values.length && typeof data.winningQuoteIndex === 'number') {
+        const lowest = Math.min(...values)
+        const winner = data.quotes[data.winningQuoteIndex]?.value
+        if (
+          typeof winner === 'number' &&
+          winner > lowest &&
+          (!data.lowestPriceJustification ||
+            data.lowestPriceJustification.trim() === '')
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['lowestPriceJustification'],
+            message:
+              'Justifique a escolha — o fornecedor vencedor não é o de menor preço.',
+          })
+        }
+      }
     }
   })
 export type NewRequestForm = z.infer<typeof newRequestSchema>
