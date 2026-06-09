@@ -36,6 +36,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
@@ -147,7 +148,7 @@ export function NewRequestForm() {
   const errorKeys = Object.keys(form.formState.errors)
 
   return (
-    <>
+    <PageTransition>
       <Header fixed>
         <div className='me-auto flex items-center gap-2 text-sm text-muted-foreground'>
           {draft === 'saving' ? (
@@ -768,7 +769,7 @@ export function NewRequestForm() {
           </form>
         </Form>
       </Main>
-    </>
+    </PageTransition>
   )
 }
 

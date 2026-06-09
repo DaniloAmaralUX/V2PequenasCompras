@@ -36,6 +36,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { PageTransition } from '@/components/layout/page-transition'
 import { PlaceholderPage } from '@/components/layout/placeholder-page'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -115,7 +116,7 @@ export function RequestDetail() {
   }
 
   return (
-    <>
+    <PageTransition>
       <Header fixed>
         <Button asChild variant='ghost' size='sm' className='me-auto'>
           <Link to='/solicitacoes'>
@@ -437,7 +438,7 @@ export function RequestDetail() {
           onConfirm={handleReject}
         />
       </Main>
-    </>
+    </PageTransition>
   )
 }
 

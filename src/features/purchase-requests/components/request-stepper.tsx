@@ -23,7 +23,7 @@ export function RequestStepper({ steps, current }: RequestStepperProps) {
               <span
                 aria-current={active ? 'step' : undefined}
                 className={cn(
-                  'flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium',
+                  'flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium transition-colors duration-200',
                   done && 'border-primary bg-primary text-primary-foreground',
                   active && 'border-primary text-primary',
                   !done && !active && 'text-muted-foreground'
@@ -33,7 +33,7 @@ export function RequestStepper({ steps, current }: RequestStepperProps) {
               </span>
               <span
                 className={cn(
-                  'whitespace-nowrap text-sm',
+                  'whitespace-nowrap text-sm transition-colors duration-200',
                   active ? 'font-medium' : 'text-muted-foreground'
                 )}
               >

@@ -13,6 +13,7 @@ import {
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -26,7 +27,7 @@ export function Dashboard() {
   const priority = getPriority(role)
 
   return (
-    <>
+    <PageTransition>
       <Header fixed>
         <Search className='me-auto' />
         <ThemeSwitch />
@@ -50,7 +51,7 @@ export function Dashboard() {
           </Button>
         </div>
 
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='stagger-list grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
           {kpis.map((kpi) => (
             <KpiCard key={kpi.label} kpi={kpi} />
           ))}
@@ -63,27 +64,29 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className='flex flex-col gap-1'>
             {priority.requests.length ? (
-              priority.requests.slice(0, 6).map((r) => (
-                <Link
-                  key={r.id}
-                  to='/solicitacoes/$id'
-                  params={{ id: r.id }}
-                  className='flex items-center justify-between gap-3 rounded-md p-2 transition-colors hover:bg-accent/50'
-                >
-                  <div className='min-w-0'>
-                    <div className='flex flex-wrap items-center gap-2'>
-                      <span className='font-medium'>{r.code}</span>
-                      <StatusBadge status={r.status} />
+              <div className='stagger-list flex flex-col gap-0.5'>
+                {priority.requests.slice(0, 6).map((r) => (
+                  <Link
+                    key={r.id}
+                    to='/solicitacoes/$id'
+                    params={{ id: r.id }}
+                    className='flex items-center justify-between gap-3 rounded-md p-2 transition-colors duration-150 hover:bg-accent/60'
+                  >
+                    <div className='min-w-0'>
+                      <div className='flex flex-wrap items-center gap-2'>
+                        <span className='font-medium'>{r.code}</span>
+                        <StatusBadge status={r.status} />
+                      </div>
+                      <p className='truncate text-sm text-muted-foreground'>
+                        {r.description}
+                      </p>
                     </div>
-                    <p className='truncate text-sm text-muted-foreground'>
-                      {r.description}
-                    </p>
-                  </div>
-                  <span className='shrink-0 text-sm font-medium tabular-nums'>
-                    {formatBRL(r.totalValue)}
-                  </span>
-                </Link>
-              ))
+                    <span className='shrink-0 text-sm font-medium tabular-nums'>
+                      {formatBRL(r.totalValue)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             ) : (
               <div className='flex flex-col items-center justify-center gap-1 py-8 text-center'>
                 <p className='text-sm text-muted-foreground'>
@@ -103,7 +106,7 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </Main>
-    </>
+    </PageTransition>
   )
 }
 

@@ -10,6 +10,7 @@ import {
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -21,7 +22,7 @@ export function Approvals() {
   const queue = useRequests().filter((r) => r.status === 'awaiting_approval')
 
   return (
-    <>
+    <PageTransition>
       <Header fixed>
         <Search className='me-auto' />
         <ThemeSwitch />
@@ -48,14 +49,14 @@ export function Approvals() {
           </CardHeader>
           <CardContent>
             {queue.length ? (
-              <div className='flex flex-col divide-y'>
+              <div className='stagger-list flex flex-col divide-y'>
                 {queue.map((r) => (
                   <Link
                     key={r.id}
                     to='/solicitacoes/$id'
                     params={{ id: r.id }}
                     search={{ tab: 'aprovacao' }}
-                    className='-mx-2 flex flex-wrap items-center justify-between gap-3 rounded-md px-2 py-3 transition-colors hover:bg-accent/50'
+                    className='-mx-2 flex flex-wrap items-center justify-between gap-3 rounded-md px-2 py-3 transition-colors duration-150 hover:bg-accent/60'
                   >
                     <div className='min-w-0'>
                       <div className='flex flex-wrap items-center gap-2'>
@@ -89,6 +90,6 @@ export function Approvals() {
           </CardContent>
         </Card>
       </Main>
-    </>
+    </PageTransition>
   )
 }

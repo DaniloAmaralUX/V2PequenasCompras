@@ -17,6 +17,16 @@
 - Integrações por **adaptadores/stubs** simulando 4 estados: sucesso, processamento, erro corrigível, erro que exige intervenção.
 - **Sem aprovação, rejeição ou exclusão em massa.** Domínio em `src/features/purchase-requests` (substitui `tasks`).
 
+# Motion (Emil Kowalski design system)
+- Toda página envolve seu retorno com `<PageTransition>` (`src/components/layout/page-transition.tsx`).
+- Todo container de lista de cards/linhas visíveis ao carregar usa a classe `stagger-list`.
+- Hover em listas: `transition-colors duration-150 hover:bg-accent/60`.
+- Durações: `var(--motion-fast)` 100ms press · `var(--motion-base)` 200ms padrão · `var(--motion-slow)` 300ms modal.
+- Easings: `var(--ease-out)` entrada · `var(--ease-in)` saída — nunca `ease-in` para entrar.
+- Botões: `active:scale-[0.97]` já embutido em `button.tsx` — não replicar.
+- Nunca animar ações de teclado (command palette, shortcuts).
+- Testar com `prefers-reduced-motion: reduce` no DevTools.
+
 # Verificação
 - Após cada fluxo: **`pnpm build` (typecheck) + `pnpm lint`**.
 - Verifique desktop, tablet, mobile e **320px**; teclado, foco, labels e contraste; tema claro/escuro.
