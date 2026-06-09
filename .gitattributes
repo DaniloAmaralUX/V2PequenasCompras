@@ -1,0 +1,2 @@
+# Normaliza fins de linha para LF em todas as plataformas (evita ruído CRLF no Windows)
+* text=auto eol=lf
