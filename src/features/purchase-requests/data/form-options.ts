@@ -2,6 +2,23 @@
 
 export const SMALL_PURCHASE_LIMIT = 3000
 
+/**
+ * Prazo (em dias) abaixo do qual a solicitação é marcada como urgente
+ * automaticamente (modelo Direct Buy — "prazo < X dias → urgente").
+ * ⚠️ Hipótese — a confirmar com o SESI (DEC-08): valor de partida do piloto.
+ */
+export const URGENCY_THRESHOLD_DAYS = 3
+
+/**
+ * Perfil-mock do requisitante. No produto, unidade e centro de custo são
+ * buscados do perfil do usuário e podem ser ajustados (fonte: matriz Base-b).
+ * ⚠️ Hipótese — a confirmar com o SESI (DEC-12).
+ */
+export const mockRequesterProfile = {
+  unit: 'Unidade Centro',
+  costCenter: 'CC-1001',
+} as const
+
 export const unitOptions = [
   'Unidade Centro',
   'Unidade Norte',

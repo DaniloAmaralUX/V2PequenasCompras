@@ -41,6 +41,8 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import {
   SMALL_PURCHASE_LIMIT,
+  URGENCY_THRESHOLD_DAYS,
+  mockRequesterProfile,
   objectNatureOptions,
   unitOptions,
   urgencyOptions,
@@ -60,11 +62,28 @@ const STEPS = [
 ]
 
 const stepFields: (keyof NewRequestForm)[][] = [
-  ['unit', 'costCenter', 'objectNature', 'urgency', 'estimatedValue'],
+  [
+    'unit',
+    'costCenter',
+    'objectNature',
+    'urgency',
+    'urgencyJustification',
+    'estimatedValue',
+  ],
   ['description', 'justification', 'items'],
   [],
   [],
 ]
+
+/** Dias entre hoje e o prazo desejado (modelo Direct Buy: prazo curto = urgente). */
+function daysUntil(dateStr: string): number | null {
+  if (!dateStr) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(`${dateStr}T00:00:00`)
+  if (Number.isNaN(target.getTime())) return null
+  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000)
+}
 
 type DraftState = 'idle' | 'saving' | 'saved'
 
@@ -78,10 +97,13 @@ export function NewRequestForm() {
     resolver: zodResolver(newRequestSchema),
     mode: 'onTouched',
     defaultValues: {
-      unit: '',
-      costCenter: '',
+      // Pré-preenchidos pelo perfil do requisitante (editáveis) — modelo Direct Buy.
+      unit: mockRequesterProfile.unit,
+      costCenter: mockRequesterProfile.costCenter,
       objectNature: '',
+      desiredDate: '',
       urgency: 'media',
+      urgencyJustification: '',
       estimatedValue: undefined as unknown as number,
       description: '',
       justification: '',
@@ -128,6 +150,21 @@ export function NewRequestForm() {
   const overLimit = typeof estimated === 'number' && estimated > SMALL_PURCHASE_LIMIT
   const supplierStatus = form.watch('supplierStatus')
   const supplierName = form.watch('supplierName')
+  const desiredDate = form.watch('desiredDate') ?? ''
+  const urgency = form.watch('urgency')
+  const daysToDeadline = daysUntil(desiredDate)
+  const autoUrgent =
+    daysToDeadline !== null &&
+    daysToDeadline >= 0 &&
+    daysToDeadline < URGENCY_THRESHOLD_DAYS
+
+  // Urgência automática (modelo Direct Buy): prazo curto marca como urgente.
+  // Mantém "editável" — só promove para alta; o requisitante pode rever depois.
+  useEffect(() => {
+    if (autoUrgent && form.getValues('urgency') !== 'alta') {
+      form.setValue('urgency', 'alta', { shouldValidate: true, shouldDirty: true })
+    }
+  }, [autoUrgent, form])
 
   const next = async () => {
     const fields = stepFields[step]
@@ -217,6 +254,9 @@ export function NewRequestForm() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormDescription>
+                          Pré-preenchida pelo seu perfil — pode ajustar.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -230,6 +270,9 @@ export function NewRequestForm() {
                         <FormControl>
                           <Input placeholder='Ex.: CC-1001' {...field} />
                         </FormControl>
+                        <FormDescription>
+                          Pré-preenchido pelo seu perfil — pode ajustar.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -260,6 +303,27 @@ export function NewRequestForm() {
                   />
                   <FormField
                     control={form.control}
+                    name='desiredDate'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prazo desejado</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='date'
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Prazo curto (menos de {URGENCY_THRESHOLD_DAYS} dias) marca a
+                          solicitação como urgente.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name='urgency'
                     render={({ field }) => (
                       <FormItem>
@@ -278,10 +342,38 @@ export function NewRequestForm() {
                             ))}
                           </SelectContent>
                         </Select>
+                        {autoUrgent && (
+                          <FormDescription className='text-amber-700 dark:text-amber-400'>
+                            Marcada como urgente automaticamente —{' '}
+                            {daysToDeadline === 0
+                              ? 'prazo é hoje'
+                              : `faltam ${daysToDeadline} dia(s)`}
+                            .
+                          </FormDescription>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  {urgency === 'alta' && (
+                    <FormField
+                      control={form.control}
+                      name='urgencyJustification'
+                      render={({ field }) => (
+                        <FormItem className='sm:col-span-2'>
+                          <FormLabel>Justificativa da urgência</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder='Obrigatória para solicitações urgentes — explique o prazo curto.'
+                              {...field}
+                              value={field.value ?? ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   <FormField
                     control={form.control}
                     name='estimatedValue'
@@ -513,14 +605,38 @@ export function NewRequestForm() {
                   </FormItem>
 
                   {supplierStatus === 'homologado' && (
-                    <Alert className='border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200'>
-                      <Check className='size-4' />
-                      <AlertTitle>Fornecedor homologado</AlertTitle>
-                      <AlertDescription className='text-emerald-900/90 dark:text-emerald-200/90'>
-                        Segue pela cotação automática. As demais validações continuam
-                        valendo.
-                      </AlertDescription>
-                    </Alert>
+                    <div className='space-y-3'>
+                      <Alert className='border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200'>
+                        <Check className='size-4' />
+                        <AlertTitle>Fornecedor homologado</AlertTitle>
+                        <AlertDescription className='text-emerald-900/90 dark:text-emerald-200/90'>
+                          Segue pela cotação automática. As demais validações continuam
+                          valendo.
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className='rounded-md border p-3'>
+                        <div className='mb-1 flex items-center justify-between'>
+                          <span className='text-sm font-medium'>
+                            Cotação automática (modelo Direct Buy)
+                          </span>
+                          <span className='text-xs text-muted-foreground'>
+                            auto-preenchida
+                          </span>
+                        </div>
+                        <div className='flex items-center justify-between text-sm'>
+                          <span className='text-muted-foreground'>{supplierName}</span>
+                          <span className='font-semibold tabular-nums'>
+                            {formatBRL(total)}
+                          </span>
+                        </div>
+                        <p className='mt-2 text-xs text-muted-foreground'>
+                          Preço de tabela vigente do fornecedor homologado, preenchido
+                          automaticamente. Hipótese — a confirmar com o SESI: fonte e
+                          atualização da tabela de preços.
+                        </p>
+                      </div>
+                    </div>
                   )}
 
                   {supplierStatus === 'bloqueado' && (
@@ -720,6 +836,12 @@ export function NewRequestForm() {
                     <ReviewFact
                       label='Natureza'
                       value={form.getValues('objectNature')}
+                    />
+                    <ReviewFact
+                      label='Urgência'
+                      value={
+                        urgencyOptions.find((o) => o.value === urgency)?.label ?? '—'
+                      }
                     />
                     <ReviewFact
                       label='Fornecedor'

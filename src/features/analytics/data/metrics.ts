@@ -36,14 +36,26 @@ export type Metrics = {
   completed: number
   awaiting: number
   attention: number
+  /** Tempo médio entre criação e conclusão (dias) — proxy de SLA do piloto. */
+  avgCycleDays: number
   periodStart: string
   periodEnd: string
   byStatus: StatusSlice[]
   byConformity: ConformitySlice[]
   byNature: NatureSlice[]
+  /** Concentração por fornecedor (apoia decisão de contrato/atacado — RF-029). */
+  bySupplier: NatureSlice[]
 }
 
 const statusOrder = Object.keys(statusMeta) as RequestStatus[]
+
+/** Diferença em dias entre duas datas ISO (YYYY-MM-DD). */
+function daysBetween(start: string, end: string): number {
+  const a = new Date(`${start.slice(0, 10)}T00:00:00`).getTime()
+  const b = new Date(`${end.slice(0, 10)}T00:00:00`).getTime()
+  if (Number.isNaN(a) || Number.isNaN(b)) return 0
+  return Math.max(0, Math.round((b - a) / 86_400_000))
+}
 
 /**
  * Agregados de indicadores derivados das solicitações-mock (mock + overrides).
@@ -68,6 +80,14 @@ export function useMetrics(): Metrics {
   const dates = requests.map((r) => r.createdAt.slice(0, 10)).sort()
   const periodStart = dates[0] ?? ''
   const periodEnd = dates[dates.length - 1] ?? ''
+
+  // Tempo médio de ciclo (criação → conclusão) das solicitações concluídas.
+  const cycles = requests
+    .filter((r) => r.status === 'completed')
+    .map((r) => daysBetween(r.createdAt, r.updatedAt))
+  const avgCycleDays = cycles.length
+    ? Math.round((cycles.reduce((s, d) => s + d, 0) / cycles.length) * 10) / 10
+    : 0
 
   // Por status (mantém a ordem canônica; só status presentes).
   const statusCounts = new Map<RequestStatus, number>()
@@ -104,6 +124,19 @@ export function useMetrics(): Metrics {
     .map(([key, v]) => ({ key, ...v }))
     .sort((a, b) => b.count - a.count)
 
+  // Concentração por fornecedor (ignora solicitações sem fornecedor definido).
+  const supplierMap = new Map<string, { count: number; value: number }>()
+  for (const r of requests) {
+    if (!r.supplierName) continue
+    const cur = supplierMap.get(r.supplierName) ?? { count: 0, value: 0 }
+    cur.count += 1
+    cur.value += r.totalValue
+    supplierMap.set(r.supplierName, cur)
+  }
+  const bySupplier: NatureSlice[] = [...supplierMap.entries()]
+    .map(([key, v]) => ({ key, ...v }))
+    .sort((a, b) => b.count - a.count)
+
   return {
     total,
     totalValue,
@@ -111,11 +144,13 @@ export function useMetrics(): Metrics {
     completed,
     awaiting,
     attention,
+    avgCycleDays,
     periodStart,
     periodEnd,
     byStatus,
     byConformity,
     byNature,
+    bySupplier,
   }
 }
 

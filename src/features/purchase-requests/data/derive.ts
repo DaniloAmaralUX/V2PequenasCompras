@@ -245,13 +245,14 @@ export function getSapState(req: PurchaseRequest): SapState {
         label: 'Na fila do SAP',
         tone: 'info',
         message:
-          'Aguardando a próxima janela de execução da automação. Você pode sair desta tela; o status será atualizado.',
+          'Aguardando a próxima das duas janelas diárias da automação (modelo Direct Buy: o robô processa a fila 2×/dia). Você pode sair desta tela; o status será atualizado.',
       }
     case 'processing_sap':
       return {
         label: 'Registrando no SAP',
         tone: 'info',
-        message: 'Integração em andamento.',
+        message:
+          'Janela da automação em andamento — registrando o pedido no SAP.',
       }
     case 'integration_error':
       return {

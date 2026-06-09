@@ -1,5 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, BarChart3, CircleCheck, Clock, Wallet } from 'lucide-react'
+import {
+  ArrowRight,
+  BarChart3,
+  CircleCheck,
+  Clock,
+  Timer,
+  Wallet,
+} from 'lucide-react'
 import { type Conformity } from '@/features/purchase-requests/schemas/purchase-request'
 import {
   Card,
@@ -60,6 +67,12 @@ export function Analytics() {
       hint: 'Com o gestor',
       icon: Clock,
     },
+    {
+      label: 'Tempo médio de ciclo',
+      value: `${m.avgCycleDays} d`,
+      hint: 'Criação → pedido (concluídas)',
+      icon: Timer,
+    },
   ]
 
   return (
@@ -83,7 +96,7 @@ export function Analytics() {
           </p>
         </div>
 
-        <div className='stagger-list grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='stagger-list grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
           {kpis.map((kpi) => {
             const Icon = kpi.icon
             return (
@@ -191,44 +204,84 @@ export function Analytics() {
           />
         </div>
 
-        {/* Por natureza do objeto — leitura (sem filtro de natureza na lista) */}
-        <IndicatorCard
-          title='Por natureza do objeto'
-          description='Volume e valor por tipo de compra.'
-          data={m.byNature.map((n) => ({
-            label: n.key,
-            count: n.count,
-            color: toneColor.info,
-          }))}
-          table={
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Natureza</TableHead>
-                  <TableHead className='text-end'>Qtd.</TableHead>
-                  <TableHead className='text-end'>Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {m.byNature.map((n) => (
-                  <TableRow key={n.key}>
-                    <TableCell>{n.key}</TableCell>
-                    <TableCell className='text-end tabular-nums'>
-                      {n.count}
-                    </TableCell>
-                    <TableCell className='text-end tabular-nums'>
-                      {formatBRL(n.value)}
-                    </TableCell>
+        <div className='grid gap-4 lg:grid-cols-2'>
+          {/* Por natureza do objeto — leitura (sem filtro de natureza na lista) */}
+          <IndicatorCard
+            title='Por natureza do objeto'
+            description='Volume e valor por tipo de compra.'
+            data={m.byNature.map((n) => ({
+              label: n.key,
+              count: n.count,
+              color: toneColor.info,
+            }))}
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Natureza</TableHead>
+                    <TableHead className='text-end'>Qtd.</TableHead>
+                    <TableHead className='text-end'>Valor</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          }
-        />
+                </TableHeader>
+                <TableBody>
+                  {m.byNature.map((n) => (
+                    <TableRow key={n.key}>
+                      <TableCell>{n.key}</TableCell>
+                      <TableCell className='text-end tabular-nums'>
+                        {n.count}
+                      </TableCell>
+                      <TableCell className='text-end tabular-nums'>
+                        {formatBRL(n.value)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            }
+          />
+
+          {/* Concentração por fornecedor — apoia decisão de contrato/atacado (RF-029) */}
+          <IndicatorCard
+            title='Concentração por fornecedor'
+            description='Quem concentra volume e valor — insumo para contrato ou compra em atacado.'
+            data={m.bySupplier.slice(0, 6).map((s) => ({
+              label: s.key,
+              count: s.count,
+              color: toneColor.info,
+            }))}
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fornecedor</TableHead>
+                    <TableHead className='text-end'>Compras</TableHead>
+                    <TableHead className='text-end'>Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {m.bySupplier.map((s) => (
+                    <TableRow key={s.key}>
+                      <TableCell>{s.key}</TableCell>
+                      <TableCell className='text-end tabular-nums'>
+                        {s.count}
+                      </TableCell>
+                      <TableCell className='text-end tabular-nums'>
+                        {formatBRL(s.value)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            }
+          />
+        </div>
 
         <p className='text-xs text-muted-foreground'>
           Hipótese — a confirmar com o SESI (DEC-10/DEC-11): indicadores oficiais,
-          metas e dimensões do BI. Dados do protótipo são ilustrativos.
+          metas e dimensões do BI. Indicadores observados no benchmarking (modelo
+          Direct Buy) como savings e preço acima da média histórica dependem de uma
+          fonte de preço de referência, ainda a definir. Dados do protótipo são
+          ilustrativos.
         </p>
       </Main>
     </PageTransition>
