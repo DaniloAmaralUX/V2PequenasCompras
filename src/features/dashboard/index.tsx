@@ -1,3 +1,7 @@
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, Plus } from 'lucide-react'
+import { roleLabels } from '@/config/roles'
+import { useMockRoleStore } from '@/stores/mock-role-store'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -6,213 +10,125 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Analytics } from './components/analytics'
-import { Overview } from './components/overview'
-import { RecentSales } from './components/recent-sales'
+import { StatusBadge } from '@/features/purchase-requests/components/status-badge'
+import { formatBRL } from '@/features/purchase-requests/lib/format'
+import { type Kpi, getKpis, getPriority } from './data/kpis'
 
 export function Dashboard() {
+  const role = useMockRoleStore((s) => s.role)
+  const kpis = getKpis(role)
+  const priority = getPriority(role)
+
   return (
     <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <TopNav links={topNav} className='me-auto' />
-        <Search />
+      <Header fixed>
+        <Search className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />
       </Header>
 
-      {/* ===== Main ===== */}
-      <Main>
-        <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
-          <div className='flex items-center space-x-2'>
-            <Button>Download</Button>
+      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+        <div className='flex flex-wrap items-end justify-between gap-2'>
+          <div>
+            <h2 className='text-2xl font-bold tracking-tight'>Visão geral</h2>
+            <p className='text-muted-foreground'>
+              {roleLabels[role].label} — acompanhe a rotina de pequenas compras.
+            </p>
           </div>
+          <Button asChild>
+            <Link to='/solicitacoes/nova'>
+              <Plus />
+              Nova solicitação
+            </Link>
+          </Button>
         </div>
-        <Tabs
-          orientation='vertical'
-          defaultValue='overview'
-          className='space-y-4'
-        >
-          <div className='w-full overflow-x-auto pb-2'>
-            <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
-              <TabsTrigger value='analytics'>Analytics</TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
-              </TabsTrigger>
-              <TabsTrigger value='notifications' disabled>
-                Notifications
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value='overview' className='space-y-4'>
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Total Revenue
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>$45,231.89</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +20.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Subscriptions
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' />
-                    <circle cx='9' cy='7' r='4' />
-                    <path d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+2350</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +180.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Sales</CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <rect width='20' height='14' x='2' y='5' rx='2' />
-                    <path d='M2 10h20' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+12,234</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +19% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Now
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M22 12h-4l-3 9L9 3l-3 9H2' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+573</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +201 since last hour
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
-              <Card className='col-span-1 lg:col-span-4'>
-                <CardHeader>
-                  <CardTitle>Overview</CardTitle>
-                </CardHeader>
-                <CardContent className='ps-2'>
-                  <Overview />
-                </CardContent>
-              </Card>
-              <Card className='col-span-1 lg:col-span-3'>
-                <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
-                  <CardDescription>
-                    You made 265 sales this month.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentSales />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value='analytics' className='space-y-4'>
-            <Analytics />
-          </TabsContent>
-        </Tabs>
+
+        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+          {kpis.map((kpi) => (
+            <KpiCard key={kpi.label} kpi={kpi} />
+          ))}
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{priority.title}</CardTitle>
+            <CardDescription>{priority.description}</CardDescription>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-1'>
+            {priority.requests.length ? (
+              priority.requests.slice(0, 6).map((r) => (
+                <Link
+                  key={r.id}
+                  to='/solicitacoes/$id'
+                  params={{ id: r.id }}
+                  className='flex items-center justify-between gap-3 rounded-md p-2 transition-colors hover:bg-accent/50'
+                >
+                  <div className='min-w-0'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <span className='font-medium'>{r.code}</span>
+                      <StatusBadge status={r.status} />
+                    </div>
+                    <p className='truncate text-sm text-muted-foreground'>
+                      {r.description}
+                    </p>
+                  </div>
+                  <span className='shrink-0 text-sm font-medium tabular-nums'>
+                    {formatBRL(r.totalValue)}
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <div className='flex flex-col items-center justify-center gap-1 py-8 text-center'>
+                <p className='text-sm text-muted-foreground'>
+                  Nada pendente para o seu perfil agora.
+                </p>
+              </div>
+            )}
+            {priority.requests.length > 0 && (
+              <Link
+                to='/solicitacoes'
+                className='mt-2 flex items-center gap-1 self-end text-sm font-medium text-primary hover:underline'
+              >
+                Ver todas as solicitações
+                <ArrowRight className='size-4' />
+              </Link>
+            )}
+          </CardContent>
+        </Card>
       </Main>
     </>
   )
 }
 
-const topNav = [
-  {
-    title: 'Overview',
-    href: 'dashboard/overview',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
-  },
-]
+function KpiCard({ kpi }: { kpi: Kpi }) {
+  const Icon = kpi.icon
+  const card = (
+    <Card className='h-full transition-colors hover:bg-accent/40'>
+      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+        <CardTitle className='text-sm font-medium'>{kpi.label}</CardTitle>
+        <Icon className='size-4 text-muted-foreground' />
+      </CardHeader>
+      <CardContent>
+        <div className='text-2xl font-bold tabular-nums'>{kpi.value}</div>
+        <p className='text-xs text-muted-foreground'>{kpi.hint}</p>
+      </CardContent>
+    </Card>
+  )
+
+  return (
+    <Link
+      to='/solicitacoes'
+      search={kpi.statusFilter ? { status: kpi.statusFilter } : {}}
+      className='block'
+    >
+      {card}
+    </Link>
+  )
+}
