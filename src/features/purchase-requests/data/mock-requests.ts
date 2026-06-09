@@ -60,6 +60,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0003',
     code: 'PC-2026-0003',
+    blockReason: 'over_limit',
     requester: { id: 'u3', name: 'Mariana Alves' },
     unit: 'Unidade Industrial',
     costCenter: 'CC-3010',
@@ -78,6 +79,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0004',
     code: 'PC-2026-0004',
+    blockReason: 'supplier_blocked',
     requester: { id: 'u4', name: 'Rafael Tavares' },
     unit: 'Escola SESI Jardim',
     costCenter: 'CC-4022',
@@ -98,6 +100,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0005',
     code: 'PC-2026-0005',
+    blockReason: 'stock_item',
     requester: { id: 'u5', name: 'Juliana Prado' },
     unit: 'Unidade Centro',
     costCenter: 'CC-1001',
@@ -116,6 +119,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0006',
     code: 'PC-2026-0006',
+    blockReason: 'active_contract',
     requester: { id: 'u6', name: 'Bruno Carvalho' },
     unit: 'Unidade Norte',
     costCenter: 'CC-2050',
@@ -136,6 +140,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0007',
     code: 'PC-2026-0007',
+    blockReason: 'fractionation',
     requester: { id: 'u2', name: 'Carlos Henrique Souza' },
     unit: 'Unidade Norte',
     costCenter: 'CC-2050',
@@ -156,6 +161,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0008',
     code: 'PC-2026-0008',
+    blockReason: 'not_homologated',
     requester: { id: 'u7', name: 'Patrícia Gomes' },
     unit: 'CAT Sul',
     costCenter: 'CC-5005',
@@ -176,6 +182,7 @@ export const mockRequests: PurchaseRequest[] = [
   {
     id: 'req-0009',
     code: 'PC-2026-0009',
+    blockReason: 'missing_evidence',
     requester: { id: 'u8', name: 'Eduardo Nunes' },
     unit: 'Unidade Industrial',
     costCenter: 'CC-3010',

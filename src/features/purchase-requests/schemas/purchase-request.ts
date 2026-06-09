@@ -31,6 +31,18 @@ export type Urgency = (typeof urgencyLevels)[number]
 export const supplierStatuses = ['homologado', 'bloqueado', 'inexistente'] as const
 export type SupplierStatus = (typeof supplierStatuses)[number]
 
+/** Motivo de bloqueio/direcionamento (alimenta as validações exibidas). */
+export const blockReasons = [
+  'over_limit',
+  'supplier_blocked',
+  'stock_item',
+  'active_contract',
+  'fractionation',
+  'missing_evidence',
+  'not_homologated',
+] as const
+export type BlockReason = (typeof blockReasons)[number]
+
 /** Área responsável atual pela solicitação (exibida junto do status). */
 export const ownerAreas = [
   'Requisitante',
@@ -67,6 +79,7 @@ export const purchaseRequestSchema = z.object({
   totalValue: z.number().nonnegative(),
   supplierName: z.string().optional(),
   supplierStatus: z.enum(supplierStatuses).optional(),
+  blockReason: z.enum(blockReasons).optional(),
   status: z.enum(requestStatuses),
   conformity: z.enum(conformityLevels),
   ownerArea: z.enum(ownerAreas),
