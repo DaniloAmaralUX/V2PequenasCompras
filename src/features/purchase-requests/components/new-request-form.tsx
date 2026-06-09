@@ -399,6 +399,7 @@ export function NewRequestForm() {
                                     type='number'
                                     min={1}
                                     placeholder='Qtd.'
+                                    aria-label='Quantidade'
                                     name={field.name}
                                     ref={field.ref}
                                     onBlur={field.onBlur}
@@ -427,6 +428,7 @@ export function NewRequestForm() {
                                     min={0}
                                     step='0.01'
                                     placeholder='Valor unit.'
+                                    aria-label='Valor unitário'
                                     name={field.name}
                                     ref={field.ref}
                                     onBlur={field.onBlur}
@@ -743,7 +745,7 @@ export function NewRequestForm() {
             )}
 
             {/* Navegação */}
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
               <Button
                 type='button'
                 variant='outline'

@@ -63,7 +63,7 @@ export function EvidenceUploader({ onCountChange }: EvidenceUploaderProps) {
       <button
         type='button'
         onClick={() => inputRef.current?.click()}
-        className='flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-6 text-center transition-colors hover:bg-accent/40'
+        className='flex w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed p-6 text-center transition-colors hover:bg-accent/40 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none'
       >
         <Paperclip className='size-5 text-muted-foreground' />
         <span className='text-sm font-medium'>Selecionar arquivos</span>

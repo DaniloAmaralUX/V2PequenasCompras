@@ -43,30 +43,38 @@ export function IndicatorCard({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
-        <ResponsiveContainer width='100%' height={chartHeight}>
-          <BarChart
-            data={data}
-            layout='vertical'
-            margin={{ top: 0, right: 16, bottom: 0, left: 8 }}
-          >
-            <XAxis type='number' hide allowDecimals={false} />
-            <YAxis
-              type='category'
-              dataKey='label'
-              width={150}
-              tickLine={false}
-              axisLine={false}
-              fontSize={12}
-              stroke='currentColor'
-              className='text-muted-foreground'
-            />
-            <Bar dataKey='count' radius={[0, 4, 4, 0]} barSize={20}>
-              {data.map((d) => (
-                <Cell key={d.label} fill={d.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        {/* Gráfico é apoio visual; a tabela abaixo é o equivalente acessível. */}
+        <div
+          role='img'
+          aria-label={`${title}: ${data
+            .map((d) => `${d.label} ${d.count}`)
+            .join(', ')}`}
+        >
+          <ResponsiveContainer width='100%' height={chartHeight}>
+            <BarChart
+              data={data}
+              layout='vertical'
+              margin={{ top: 0, right: 16, bottom: 0, left: 8 }}
+            >
+              <XAxis type='number' hide allowDecimals={false} />
+              <YAxis
+                type='category'
+                dataKey='label'
+                width={150}
+                tickLine={false}
+                axisLine={false}
+                fontSize={12}
+                stroke='currentColor'
+                className='text-muted-foreground'
+              />
+              <Bar dataKey='count' radius={[0, 4, 4, 0]} barSize={20}>
+                {data.map((d) => (
+                  <Cell key={d.label} fill={d.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
         {table}
       </CardContent>
     </Card>

@@ -67,7 +67,7 @@ export function SupplierCombobox({ value, onSelect }: SupplierComboboxProps) {
                     status: 'inexistente',
                   })
                 }
-                className='w-full rounded-sm px-2 py-1.5 text-start text-sm hover:bg-accent'
+                className='w-full rounded-sm px-2 py-1.5 text-start text-sm hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none'
               >
                 Usar “{query || '...'}” como fornecedor não homologado
               </button>
