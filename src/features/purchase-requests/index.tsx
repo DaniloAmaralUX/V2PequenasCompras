@@ -8,9 +8,11 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { RequestsTable } from './components/requests-table'
-import { mockRequests } from './data/mock-requests'
+import { useRequests } from './data/use-requests'
 
 export function PurchaseRequests() {
+  const data = useRequests()
+
   return (
     <>
       <Header fixed>
@@ -36,7 +38,7 @@ export function PurchaseRequests() {
             </Link>
           </Button>
         </div>
-        <RequestsTable data={mockRequests} />
+        <RequestsTable data={data} />
       </Main>
     </>
   )

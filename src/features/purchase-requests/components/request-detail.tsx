@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
@@ -10,6 +11,7 @@ import {
   TriangleAlert,
   User,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useMockRoleStore } from '@/stores/mock-role-store'
 import { Button } from '@/components/ui/button'
@@ -30,6 +32,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -44,8 +47,11 @@ import {
   getValidations,
   urgencyLabels,
 } from '../data/derive'
-import { mockRequests } from '../data/mock-requests'
+import { rejectionReasonLabel } from '../data/rejection-reasons'
+import { useRequest } from '../data/use-requests'
 import { formatBRL, formatDate } from '../lib/format'
+import { useRequestOverridesStore } from '../stores/request-overrides-store'
+import { RejectionDialog } from './rejection-dialog'
 import { ConformityBadge, StatusBadge } from './status-badge'
 
 const route = getRouteApi('/_authenticated/solicitacoes/$id')
@@ -76,7 +82,12 @@ export function RequestDetail() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const role = useMockRoleStore((s) => s.role)
-  const req = mockRequests.find((r) => r.id === id)
+  const req = useRequest(id)
+  const approve = useRequestOverridesStore((s) => s.approve)
+  const reject = useRequestOverridesStore((s) => s.reject)
+  const decisions = useRequestOverridesStore((s) => s.decisions)
+  const [approveOpen, setApproveOpen] = useState(false)
+  const [rejectOpen, setRejectOpen] = useState(false)
 
   if (!req) {
     return (
@@ -91,6 +102,17 @@ export function RequestDetail() {
   const validations = getValidations(req)
   const timeline = getTimeline(req)
   const sap = getSapState(req)
+  const decision = decisions[req.id]
+
+  const handleApprove = () => {
+    approve(req.id)
+    setApproveOpen(false)
+    toast.success('Solicitação aprovada — seguiu para automação no SAP.')
+  }
+  const handleReject = (reasonCode: string, reasonText?: string) => {
+    reject(req.id, reasonCode, reasonText)
+    toast('Solicitação rejeitada.', { description: rejectionReasonLabel(reasonCode) })
+  }
 
   return (
     <>
@@ -121,11 +143,6 @@ export function RequestDetail() {
               <span className='font-medium text-foreground'>{req.ownerArea}</span>
             </p>
           </div>
-          {role === 'gestor' && req.status === 'awaiting_approval' && (
-            <Button asChild>
-              <Link to='/aprovacoes'>Ir para a fila de aprovação</Link>
-            </Button>
-          )}
           {(req.status === 'needs_correction' ||
             req.status === 'integration_error') && (
             <Button asChild>
@@ -313,11 +330,25 @@ export function RequestDetail() {
                 <CardTitle>Aprovação gerencial</CardTitle>
               </CardHeader>
               <CardContent className='space-y-3 text-sm'>
-                <ApprovalState status={req.status} />
+                <ApprovalState
+                  status={req.status}
+                  reasonCode={decision?.reasonCode}
+                  reasonText={decision?.reasonText}
+                />
                 {role === 'gestor' && req.status === 'awaiting_approval' && (
-                  <Button asChild>
-                    <Link to='/aprovacoes'>Decidir na fila de aprovação</Link>
-                  </Button>
+                  <div className='flex flex-wrap gap-2'>
+                    <Button onClick={() => setApproveOpen(true)}>
+                      Aprovar solicitação
+                    </Button>
+                    <Button variant='outline' onClick={() => setRejectOpen(true)}>
+                      Rejeitar solicitação
+                    </Button>
+                  </div>
+                )}
+                {role !== 'gestor' && req.status === 'awaiting_approval' && (
+                  <p className='text-xs text-muted-foreground'>
+                    Apenas o gestor aprovador pode decidir nesta solicitação.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -390,6 +421,21 @@ export function RequestDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <ConfirmDialog
+          open={approveOpen}
+          onOpenChange={setApproveOpen}
+          title='Aprovar solicitação'
+          desc='A solicitação seguirá para a automação de registro no SAP. Deseja confirmar?'
+          confirmText='Aprovar'
+          cancelBtnText='Cancelar'
+          handleConfirm={handleApprove}
+        />
+        <RejectionDialog
+          open={rejectOpen}
+          onOpenChange={setRejectOpen}
+          onConfirm={handleReject}
+        />
       </Main>
     </>
   )
@@ -404,16 +450,41 @@ function Fact({ label, value }: { label: string; value: string }) {
   )
 }
 
-function ApprovalState({ status }: { status: string }) {
+function ApprovalState({
+  status,
+  reasonCode,
+  reasonText,
+}: {
+  status: string
+  reasonCode?: string
+  reasonText?: string
+}) {
   if (status === 'awaiting_approval')
-    return <p className='text-muted-foreground'>Aguardando decisão do gestor responsável.</p>
+    return (
+      <p className='text-muted-foreground'>
+        Aguardando decisão do gestor responsável.
+      </p>
+    )
   if (status === 'rejected')
-    return <p className='text-muted-foreground'>Solicitação rejeitada pelo gestor.</p>
+    return (
+      <div className='space-y-1'>
+        <p className='text-muted-foreground'>Solicitação rejeitada pelo gestor.</p>
+        {(reasonCode || reasonText) && (
+          <p>
+            Motivo:{' '}
+            <span className='font-medium'>{rejectionReasonLabel(reasonCode)}</span>
+            {reasonText ? ` — ${reasonText}` : ''}
+          </p>
+        )}
+      </div>
+    )
   if (['approved', 'queued_for_sap', 'processing_sap', 'completed'].includes(status))
-    return <p className='text-muted-foreground'>Aprovada pelo gestor — seguiu para automação.</p>
+    return (
+      <p className='text-muted-foreground'>
+        Aprovada pelo gestor — seguiu para automação.
+      </p>
+    )
   return (
-    <p className='text-muted-foreground'>
-      Ainda não enviada para aprovação.
-    </p>
+    <p className='text-muted-foreground'>Ainda não enviada para aprovação.</p>
   )
 }
