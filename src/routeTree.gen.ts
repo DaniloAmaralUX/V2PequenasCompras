@@ -47,7 +47,7 @@ import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_auth
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedAdministracaoRegrasRouteImport } from './routes/_authenticated/administracao/regras'
 import { Route as AuthenticatedAdministracaoIntegracoesRouteImport } from './routes/_authenticated/administracao/integracoes'
-import { Route as AuthenticatedSolicitacoesIdCorrigirRouteImport } from './routes/_authenticated/solicitacoes/$id.corrigir'
+import { Route as AuthenticatedSolicitacoesIdCorrigirRouteImport } from './routes/_authenticated/solicitacoes/$id_.corrigir'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -255,9 +255,9 @@ const AuthenticatedAdministracaoIntegracoesRoute =
   } as any)
 const AuthenticatedSolicitacoesIdCorrigirRoute =
   AuthenticatedSolicitacoesIdCorrigirRouteImport.update({
-    id: '/corrigir',
-    path: '/corrigir',
-    getParentRoute: () => AuthenticatedSolicitacoesIdRoute,
+    id: '/solicitacoes/$id_/corrigir',
+    path: '/solicitacoes/$id/corrigir',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -281,7 +281,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRouteWithChildren
+  '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
@@ -318,7 +318,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRouteWithChildren
+  '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
@@ -360,7 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/_authenticated/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRouteWithChildren
+  '/_authenticated/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/_authenticated/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/clerk/(auth)/sign-in': typeof ClerkauthSignInRoute
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
@@ -375,7 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/solicitacoes/': typeof AuthenticatedSolicitacoesIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
-  '/_authenticated/solicitacoes/$id/corrigir': typeof AuthenticatedSolicitacoesIdCorrigirRoute
+  '/_authenticated/solicitacoes/$id_/corrigir': typeof AuthenticatedSolicitacoesIdCorrigirRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -493,7 +493,7 @@ export interface FileRouteTypes {
     | '/_authenticated/solicitacoes/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
-    | '/_authenticated/solicitacoes/$id/corrigir'
+    | '/_authenticated/solicitacoes/$id_/corrigir'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -779,12 +779,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdministracaoIntegracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/solicitacoes/$id/corrigir': {
-      id: '/_authenticated/solicitacoes/$id/corrigir'
-      path: '/corrigir'
+    '/_authenticated/solicitacoes/$id_/corrigir': {
+      id: '/_authenticated/solicitacoes/$id_/corrigir'
+      path: '/solicitacoes/$id/corrigir'
       fullPath: '/solicitacoes/$id/corrigir'
       preLoaderRoute: typeof AuthenticatedSolicitacoesIdCorrigirRouteImport
-      parentRoute: typeof AuthenticatedSolicitacoesIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -812,28 +812,13 @@ const AuthenticatedSettingsRouteRouteWithChildren =
     AuthenticatedSettingsRouteRouteChildren,
   )
 
-interface AuthenticatedSolicitacoesIdRouteChildren {
-  AuthenticatedSolicitacoesIdCorrigirRoute: typeof AuthenticatedSolicitacoesIdCorrigirRoute
-}
-
-const AuthenticatedSolicitacoesIdRouteChildren: AuthenticatedSolicitacoesIdRouteChildren =
-  {
-    AuthenticatedSolicitacoesIdCorrigirRoute:
-      AuthenticatedSolicitacoesIdCorrigirRoute,
-  }
-
-const AuthenticatedSolicitacoesIdRouteWithChildren =
-  AuthenticatedSolicitacoesIdRoute._addFileChildren(
-    AuthenticatedSolicitacoesIdRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdministracaoIntegracoesRoute: typeof AuthenticatedAdministracaoIntegracoesRoute
   AuthenticatedAdministracaoRegrasRoute: typeof AuthenticatedAdministracaoRegrasRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedSolicitacoesIdRoute: typeof AuthenticatedSolicitacoesIdRouteWithChildren
+  AuthenticatedSolicitacoesIdRoute: typeof AuthenticatedSolicitacoesIdRoute
   AuthenticatedSolicitacoesNovaRoute: typeof AuthenticatedSolicitacoesNovaRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedAprovacoesIndexRoute: typeof AuthenticatedAprovacoesIndexRoute
@@ -844,6 +829,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSolicitacoesIndexRoute: typeof AuthenticatedSolicitacoesIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedSolicitacoesIdCorrigirRoute: typeof AuthenticatedSolicitacoesIdCorrigirRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -853,8 +839,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdministracaoIntegracoesRoute,
   AuthenticatedAdministracaoRegrasRoute: AuthenticatedAdministracaoRegrasRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedSolicitacoesIdRoute:
-    AuthenticatedSolicitacoesIdRouteWithChildren,
+  AuthenticatedSolicitacoesIdRoute: AuthenticatedSolicitacoesIdRoute,
   AuthenticatedSolicitacoesNovaRoute: AuthenticatedSolicitacoesNovaRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedAprovacoesIndexRoute: AuthenticatedAprovacoesIndexRoute,
@@ -865,6 +850,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSolicitacoesIndexRoute: AuthenticatedSolicitacoesIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedSolicitacoesIdCorrigirRoute:
+    AuthenticatedSolicitacoesIdCorrigirRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

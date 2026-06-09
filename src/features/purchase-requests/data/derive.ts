@@ -183,7 +183,14 @@ export function getTimeline(req: PurchaseRequest): TimelineEvent[] {
       add({ at: req.updatedAt, actor: 'Sistema', action: 'Devolvida para correção', kind: 'system' })
       break
     case 'awaiting_approval':
-      add({ at: req.updatedAt, actor: req.requester.name, action: 'Enviada para aprovação', kind: 'user' })
+      // Com motivo de bloqueio + aguardando aprovação = foi corrigida e reenviada;
+      // preserva o laço de correção na trilha (CT-12), sem apagar histórico.
+      if (req.blockReason) {
+        add({ at: req.updatedAt, actor: 'Sistema', action: 'Devolvida para correção', kind: 'system' })
+        add({ at: req.updatedAt, actor: req.requester.name, action: 'Reenviada após correção', kind: 'user' })
+      } else {
+        add({ at: req.updatedAt, actor: req.requester.name, action: 'Enviada para aprovação', kind: 'user' })
+      }
       break
     case 'rejected':
       add({ at: req.updatedAt, actor: 'Gestor', action: 'Solicitação rejeitada', kind: 'user' })

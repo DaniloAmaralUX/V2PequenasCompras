@@ -16,6 +16,7 @@ type RequestOverridesState = {
   decisions: Record<string, Decision>
   approve: (id: string) => void
   reject: (id: string, reasonCode: string, reasonText?: string) => void
+  resubmit: (id: string) => void
 }
 
 export const useRequestOverridesStore = create<RequestOverridesState>()(
@@ -37,6 +38,13 @@ export const useRequestOverridesStore = create<RequestOverridesState>()(
             [id]: { status: 'rejected', ownerArea: 'Gestor' },
           },
           decisions: { ...s.decisions, [id]: { reasonCode, reasonText } },
+        })),
+      resubmit: (id) =>
+        set((s) => ({
+          overrides: {
+            ...s.overrides,
+            [id]: { status: 'awaiting_approval', ownerArea: 'Gestor' },
+          },
         })),
     }),
     {
