@@ -1,205 +1,98 @@
 import {
-  Construction,
   LayoutDashboard,
-  Monitor,
-  Bug,
-  ListTodo,
-  FileX,
-  HelpCircle,
-  Lock,
-  Bell,
-  Package,
-  Palette,
-  ServerOff,
+  FileText,
+  BadgeCheck,
+  History,
+  TrendingUp,
   Settings,
-  Wrench,
-  UserCog,
-  UserX,
-  Users,
-  MessagesSquare,
-  ShieldCheck,
-  AudioWaveform,
-  Command,
-  GalleryVerticalEnd,
+  SlidersHorizontal,
+  Plug,
 } from 'lucide-react'
-import { ClerkLogo } from '@/assets/clerk-logo'
-import { type SidebarData } from '../types'
+import { type Role } from '@/config/roles'
+import { type NavGroup, type NavItem, type SidebarData } from '../types'
 
+/**
+ * Navegação do MVP Pequenas Compras (PRD Design §9).
+ * O gating por papel (`roles`) é hipótese de prototipação — a confirmar com o
+ * SESI (DEC-09 / DEC-12). Itens/grupos sem `roles` são visíveis para todos.
+ */
 export const sidebarData: SidebarData = {
-  user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  teams: [
-    {
-      name: 'Shadcn Admin',
-      logo: Command,
-      plan: 'Vite + ShadcnUI',
-    },
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
-    },
-  ],
   navGroups: [
     {
-      title: 'General',
+      title: 'Pequenas Compras',
       items: [
+        { title: 'Visão geral', url: '/', icon: LayoutDashboard },
+        { title: 'Solicitações', url: '/solicitacoes', icon: FileText },
         {
-          title: 'Dashboard',
-          url: '/',
-          icon: LayoutDashboard,
-        },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: ListTodo,
-        },
-        {
-          title: 'Apps',
-          url: '/apps',
-          icon: Package,
-        },
-        {
-          title: 'Chats',
-          url: '/chats',
-          badge: '3',
-          icon: MessagesSquare,
-        },
-        {
-          title: 'Users',
-          url: '/users',
-          icon: Users,
-        },
-        {
-          title: 'Secured by Clerk',
-          icon: ClerkLogo,
-          items: [
-            {
-              title: 'Sign In',
-              url: '/clerk/sign-in',
-            },
-            {
-              title: 'Sign Up',
-              url: '/clerk/sign-up',
-            },
-            {
-              title: 'User Management',
-              url: '/clerk/user-management',
-            },
-          ],
+          title: 'Aprovações',
+          url: '/aprovacoes',
+          icon: BadgeCheck,
+          roles: ['gestor', 'comprador'],
         },
       ],
     },
     {
-      title: 'Pages',
+      title: 'Gestão',
+      roles: ['comprador', 'compliance', 'gestao', 'ti'],
       items: [
         {
-          title: 'Auth',
-          icon: ShieldCheck,
-          items: [
-            {
-              title: 'Sign In',
-              url: '/sign-in',
-            },
-            {
-              title: 'Sign In (2 Col)',
-              url: '/sign-in-2',
-            },
-            {
-              title: 'Sign Up',
-              url: '/sign-up',
-            },
-            {
-              title: 'Forgot Password',
-              url: '/forgot-password',
-            },
-            {
-              title: 'OTP',
-              url: '/otp',
-            },
-          ],
+          title: 'Auditoria',
+          url: '/auditoria',
+          icon: History,
+          roles: ['comprador', 'compliance', 'gestao', 'ti'],
         },
         {
-          title: 'Errors',
-          icon: Bug,
-          items: [
-            {
-              title: 'Unauthorized',
-              url: '/errors/unauthorized',
-              icon: Lock,
-            },
-            {
-              title: 'Forbidden',
-              url: '/errors/forbidden',
-              icon: UserX,
-            },
-            {
-              title: 'Not Found',
-              url: '/errors/not-found',
-              icon: FileX,
-            },
-            {
-              title: 'Internal Server Error',
-              url: '/errors/internal-server-error',
-              icon: ServerOff,
-            },
-            {
-              title: 'Maintenance Error',
-              url: '/errors/maintenance-error',
-              icon: Construction,
-            },
-          ],
+          title: 'Indicadores',
+          url: '/indicadores',
+          icon: TrendingUp,
+          roles: ['comprador', 'compliance', 'gestao', 'ti'],
         },
-      ],
-    },
-    {
-      title: 'Other',
-      items: [
         {
-          title: 'Settings',
+          title: 'Administração',
           icon: Settings,
+          roles: ['comprador', 'compliance', 'ti'],
           items: [
             {
-              title: 'Profile',
-              url: '/settings',
-              icon: UserCog,
+              title: 'Regras',
+              url: '/administracao/regras',
+              icon: SlidersHorizontal,
+              roles: ['comprador', 'compliance', 'ti'],
             },
             {
-              title: 'Account',
-              url: '/settings/account',
-              icon: Wrench,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: Bell,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
+              title: 'Integrações',
+              url: '/administracao/integracoes',
+              icon: Plug,
+              roles: ['ti'],
             },
           ],
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: HelpCircle,
         },
       ],
     },
   ],
+}
+
+/** Filtra grupos, itens e subitens da navegação pelo papel ativo. */
+export function filterNavByRole(navGroups: NavGroup[], role: Role): NavGroup[] {
+  const allowed = (r?: Role[]) => !r || r.includes(role)
+  const result: NavGroup[] = []
+
+  for (const group of navGroups) {
+    if (!allowed(group.roles)) continue
+    const items: NavItem[] = []
+
+    for (const item of group.items) {
+      if (!allowed(item.roles)) continue
+      if (item.items) {
+        const sub = item.items.filter((s) => allowed(s.roles))
+        if (sub.length === 0) continue
+        items.push({ ...item, items: sub })
+      } else {
+        items.push(item)
+      }
+    }
+
+    if (items.length > 0) result.push({ ...group, items })
+  }
+
+  return result
 }

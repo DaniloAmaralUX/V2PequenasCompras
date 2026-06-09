@@ -1,3 +1,5 @@
+import { roleLabels } from '@/config/roles'
+import { useMockRoleStore } from '@/stores/mock-role-store'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -6,30 +8,33 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
-// import { AppTitle } from './app-title'
-import { sidebarData } from './data/sidebar-data'
+import { sidebarData, filterNavByRole } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
-import { TeamSwitcher } from './team-switcher'
+import { RoleSwitcher } from './role-switcher'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
+  const role = useMockRoleStore((s) => s.role)
+  const navGroups = filterNavByRole(sidebarData.navGroups, role)
+  const user = {
+    name: roleLabels[role].label,
+    email: `${role}@sesi.prototipo`,
+    avatar: '',
+  }
+
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
-
-        {/* Replace <TeamSwitch /> with the following <AppTitle />
-         /* if you want to use the normal app title instead of TeamSwitch dropdown */}
-        {/* <AppTitle /> */}
+        <RoleSwitcher />
       </SidebarHeader>
       <SidebarContent>
-        {sidebarData.navGroups.map((props) => (
+        {navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
