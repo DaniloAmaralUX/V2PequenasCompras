@@ -15,6 +15,8 @@ pnpm build    # tsc -b + vite build (typecheck + build de produção)
 pnpm lint     # eslint (0 erros / 0 warnings esperado)
 ```
 
+**Deploy (Vercel):** `vercel.json` na raiz já configura o **rewrite SPA** (`/(.*) → /index.html`), necessário para que deep links e refresh em rotas internas (ex.: `/solicitacoes/req-0003`) não retornem 404. Build de produção: `pnpm build` → `dist/`. O layout `_authenticated` **não** tem guard de autenticação, então o deploy abre direto no dashboard (adequado para teste com usuário; trocar por auth real é tarefa do dev).
+
 Gotchas do ambiente (registrados no `CLAUDE.md`):
 - **pnpm 11** exige `allowBuilds` (esbuild/@clerk) em `pnpm-workspace.yaml`.
 - Ao **adicionar rotas**, rode `pnpm build` (ou `pnpm exec vite build`) para **regenerar `src/routeTree.gen.ts`** antes do typecheck.
@@ -39,6 +41,24 @@ Gotchas do ambiente (registrados no `CLAUDE.md`):
 | Administração — Integrações | `/administracao/integracoes` | `features/admin/integrations` | RNF-07/08 |
 
 **Slice vertical do caminho feliz** funciona ponta a ponta: Nova solicitação elegível → Aprovação → fila SAP simulada → Pedido criado. As 9 exceções críticas (acima do limite, fornecedor bloqueado/não homologado, item de estoque, contrato vigente, possível fracionamento, fora do menor preço, ausência de evidência, erro SAP, correção) estão representadas na UI.
+
+### Modelo operacional Direct Buy (fonte: documentos do cliente — Inc.14/Inc.15)
+
+O MVP é o **fluxo operacional Direct Buy** (benchmarking + BPMN oficial do cliente), não um BI analítico. Processo (limite **R$ 3.000**, configurável em Administração → Regras):
+
+1. Requisitante abre a solicitação. Campos de perfil (unidade, centro de custo, **natureza do objeto**) vêm **auto-preenchidos e editáveis** (`data/form-options.ts → mockRequesterProfile`).
+2. **Robô — 1ª passagem (elegibilidade):** valida governança (limite, fornecedor, estoque, contrato, fracionamento). Falha → **bloqueada** (terminal, "pedido não registrado"). Acima do limite → **redirecionada** ao fluxo normal de compras (SAP).
+3. **Gestor aprova.**
+4. **Janela 2×/dia** (timer) → **Robô — 2ª passagem (análise de regras)** para abertura do pedido. Sem impedimento → **pedido criado no SAP**; com impedimento → erro devolvido para **correção** (laço CT-12).
+
+As **duas passagens do robô** aparecem na trilha (aba Histórico — `data/derive.ts → getTimeline`, ator "Robô Direct Buy"). A máquina de status (`schemas/purchase-request.ts`) modela o fluxo; `approve()` leva direto a `queued_for_sap` (entra na janela 2×/dia).
+
+**Regras de compliance exigidas no formulário** (Inc.15) — lidas do `rules-store` (admin), em `components/new-request-form.tsx` + `schemas/new-request.ts`:
+- Fornecedor **homologado** → cartão "Cotação automática" (preço de tabela — *placeholder*, ver §7 Limitações).
+- Fornecedor **não homologado** → fluxo de exceção: mínimo de cotações (`min_quotes`), **data/hora da coleta** obrigatória por cotação, **evidência** ≥ nº de cotações, **seletor "Fornecedor vencedor"** (default automático no menor preço; justificativa obrigatória via `superRefine` se escolher outro).
+- **Urgência automática:** prazo < `URGENCY_THRESHOLD_DAYS` (3) → marca urgente + exige justificativa.
+
+> ⚠️ **Hipótese — a confirmar com o SESI:** limite, threshold de urgência, `min_quotes` e a **fonte da tabela de preços** do fornecedor homologado.
 
 ---
 
@@ -111,6 +131,9 @@ Todas aparecem rotuladas **"Hipótese — a confirmar com o SESI"** na UI. Ver `
 - **Mock-only:** nenhum dado persiste em servidor; "upload" de evidência é visual (barra de progresso simulada).
 - Persistência só em `sessionStorage` (zera ao fechar a aba).
 - `evaluateCompliance`/validações são **stubs** derivados do `status`/`blockReason` do mock (`data/derive.ts`), não um motor de regras real.
+- A "**Cotação automática**" do fornecedor homologado exibe o **total digitado dos itens** como preço de tabela — *placeholder*; falta a fonte real da tabela de preços (rotulado como hipótese na UI).
+- Evidências são contadas globalmente (`evidenceCount`) e validadas por **contagem** (≥ nº de cotações); ainda **sem** vínculo físico arquivo↔cotação 1:1 (evolução futura).
+- Indicadores como **savings** e **preço acima da média histórica** ficam de fora por dependerem de fonte de preço de referência (não inventados).
 - Autenticação é a do template (não definitiva).
 - Conteúdo (nomes, valores, fornecedores) é ilustrativo em PT-BR.
 
@@ -133,4 +156,6 @@ Todas aparecem rotuladas **"Hipótese — a confirmar com o SESI"** na UI. Ver `
 - ✅ Acessibilidade: foco visível, `aria-label` em botões-ícone e inputs sem label textual, gráficos com `role=img`/equivalente em tabela, status com **ícone+texto** (nunca só cor), `prefers-reduced-motion`.
 - ✅ Fidelidade ao produto: decisões pendentes como hipóteses; status separado do resultado de validação; mensagens com motivo + próxima ação; histórico preservado na correção (CT-12).
 
-Histórico de construção: ver `git log` da branch (14 commits, do baseline ao Inc.13).
+- ✅ **Alinhamento ao cliente (Inc.14/15):** fluxo operacional Direct Buy fiel ao BPMN oficial (robô em 2 passagens, janela 2×/dia, redirecionamento >R$3.000); regras de compliance do mapeamento Base-b **exigidas** no formulário; `vercel.json` pronto para deploy sem 404 em deep links.
+
+Histórico de construção: ver `git log` da branch — do baseline ao **Inc.15**: Inc.13 limpeza/handoff (`7c5de3f`), Inc.14 refinamentos Direct Buy (`bfc1ebb`), Inc.15 alinhamento fino ao BPMN + config de deploy (`996e075`).
