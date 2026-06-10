@@ -23,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { PageTransition } from '@/components/layout/page-transition'
@@ -90,7 +89,6 @@ export function Analytics() {
           {m.periodEnd ? formatDate(m.periodEnd) : '—'}
         </div>
         <ThemeSwitch />
-        <ConfigDrawer />
         <ProfileDropdown />
       </Header>
 

@@ -21,18 +21,12 @@ import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedSolicitacoesIndexRouteImport } from './routes/_authenticated/solicitacoes/index'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedIndicadoresIndexRouteImport } from './routes/_authenticated/indicadores/index'
 import { Route as AuthenticatedAuditoriaIndexRouteImport } from './routes/_authenticated/auditoria/index'
 import { Route as AuthenticatedAprovacoesIndexRouteImport } from './routes/_authenticated/aprovacoes/index'
 import { Route as AuthenticatedSolicitacoesNovaRouteImport } from './routes/_authenticated/solicitacoes/nova'
 import { Route as AuthenticatedSolicitacoesIdRouteImport } from './routes/_authenticated/solicitacoes/$id'
-import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
-import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
-import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
-import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedAdministracaoRegrasRouteImport } from './routes/_authenticated/administracao/regras'
 import { Route as AuthenticatedAdministracaoIntegracoesRouteImport } from './routes/_authenticated/administracao/integracoes'
@@ -97,23 +91,11 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRouteRoute =
-  AuthenticatedSettingsRouteRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedSolicitacoesIndexRoute =
   AuthenticatedSolicitacoesIndexRouteImport.update({
     id: '/solicitacoes/',
     path: '/solicitacoes/',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedIndicadoresIndexRoute =
   AuthenticatedIndicadoresIndexRouteImport.update({
@@ -145,30 +127,6 @@ const AuthenticatedSolicitacoesIdRoute =
     path: '/solicitacoes/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSettingsNotificationsRoute =
-  AuthenticatedSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsDisplayRoute =
-  AuthenticatedSettingsDisplayRouteImport.update({
-    id: '/display',
-    path: '/display',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsAppearanceRoute =
-  AuthenticatedSettingsAppearanceRouteImport.update({
-    id: '/appearance',
-    path: '/appearance',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsAccountRoute =
-  AuthenticatedSettingsAccountRouteImport.update({
-    id: '/account',
-    path: '/account',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -196,7 +154,6 @@ const AuthenticatedSolicitacoesIdCorrigirRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
-  '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
@@ -210,16 +167,11 @@ export interface FileRoutesByFullPath {
   '/administracao/integracoes': typeof AuthenticatedAdministracaoIntegracoesRoute
   '/administracao/regras': typeof AuthenticatedAdministracaoRegrasRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/aprovacoes/': typeof AuthenticatedAprovacoesIndexRoute
   '/auditoria/': typeof AuthenticatedAuditoriaIndexRoute
   '/indicadores/': typeof AuthenticatedIndicadoresIndexRoute
-  '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/solicitacoes/': typeof AuthenticatedSolicitacoesIndexRoute
   '/solicitacoes/$id/corrigir': typeof AuthenticatedSolicitacoesIdCorrigirRoute
 }
@@ -238,23 +190,17 @@ export interface FileRoutesByTo {
   '/administracao/integracoes': typeof AuthenticatedAdministracaoIntegracoesRoute
   '/administracao/regras': typeof AuthenticatedAdministracaoRegrasRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/aprovacoes': typeof AuthenticatedAprovacoesIndexRoute
   '/auditoria': typeof AuthenticatedAuditoriaIndexRoute
   '/indicadores': typeof AuthenticatedIndicadoresIndexRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
   '/solicitacoes': typeof AuthenticatedSolicitacoesIndexRoute
   '/solicitacoes/$id/corrigir': typeof AuthenticatedSolicitacoesIdCorrigirRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/otp': typeof authOtpRoute
   '/(auth)/sign-in': typeof authSignInRoute
@@ -269,16 +215,11 @@ export interface FileRoutesById {
   '/_authenticated/administracao/integracoes': typeof AuthenticatedAdministracaoIntegracoesRoute
   '/_authenticated/administracao/regras': typeof AuthenticatedAdministracaoRegrasRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/solicitacoes/$id': typeof AuthenticatedSolicitacoesIdRoute
   '/_authenticated/solicitacoes/nova': typeof AuthenticatedSolicitacoesNovaRoute
   '/_authenticated/aprovacoes/': typeof AuthenticatedAprovacoesIndexRoute
   '/_authenticated/auditoria/': typeof AuthenticatedAuditoriaIndexRoute
   '/_authenticated/indicadores/': typeof AuthenticatedIndicadoresIndexRoute
-  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/solicitacoes/': typeof AuthenticatedSolicitacoesIndexRoute
   '/_authenticated/solicitacoes/$id_/corrigir': typeof AuthenticatedSolicitacoesIdCorrigirRoute
 }
@@ -286,7 +227,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/settings'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
@@ -300,16 +240,11 @@ export interface FileRouteTypes {
     | '/administracao/integracoes'
     | '/administracao/regras'
     | '/errors/$error'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
     | '/solicitacoes/$id'
     | '/solicitacoes/nova'
     | '/aprovacoes/'
     | '/auditoria/'
     | '/indicadores/'
-    | '/settings/'
     | '/solicitacoes/'
     | '/solicitacoes/$id/corrigir'
   fileRoutesByTo: FileRoutesByTo
@@ -328,22 +263,16 @@ export interface FileRouteTypes {
     | '/administracao/integracoes'
     | '/administracao/regras'
     | '/errors/$error'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
     | '/solicitacoes/$id'
     | '/solicitacoes/nova'
     | '/aprovacoes'
     | '/auditoria'
     | '/indicadores'
-    | '/settings'
     | '/solicitacoes'
     | '/solicitacoes/$id/corrigir'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/otp'
     | '/(auth)/sign-in'
@@ -358,16 +287,11 @@ export interface FileRouteTypes {
     | '/_authenticated/administracao/integracoes'
     | '/_authenticated/administracao/regras'
     | '/_authenticated/errors/$error'
-    | '/_authenticated/settings/account'
-    | '/_authenticated/settings/appearance'
-    | '/_authenticated/settings/display'
-    | '/_authenticated/settings/notifications'
     | '/_authenticated/solicitacoes/$id'
     | '/_authenticated/solicitacoes/nova'
     | '/_authenticated/aprovacoes/'
     | '/_authenticated/auditoria/'
     | '/_authenticated/indicadores/'
-    | '/_authenticated/settings/'
     | '/_authenticated/solicitacoes/'
     | '/_authenticated/solicitacoes/$id_/corrigir'
   fileRoutesById: FileRoutesById
@@ -472,26 +396,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/solicitacoes/': {
       id: '/_authenticated/solicitacoes/'
       path: '/solicitacoes'
       fullPath: '/solicitacoes/'
       preLoaderRoute: typeof AuthenticatedSolicitacoesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
-      path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/indicadores/': {
       id: '/_authenticated/indicadores/'
@@ -528,34 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSolicitacoesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications'
-      path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display'
-      path: '/display'
-      fullPath: '/settings/display'
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/appearance': {
-      id: '/_authenticated/settings/appearance'
-      path: '/appearance'
-      fullPath: '/settings/appearance'
-      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/account': {
-      id: '/_authenticated/settings/account'
-      path: '/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -587,31 +469,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedSettingsRouteRouteChildren {
-  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
-  AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
-  AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
-  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
-}
-
-const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
-  {
-    AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
-    AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
-    AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
-    AuthenticatedSettingsNotificationsRoute:
-      AuthenticatedSettingsNotificationsRoute,
-    AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
-  }
-
-const AuthenticatedSettingsRouteRouteWithChildren =
-  AuthenticatedSettingsRouteRoute._addFileChildren(
-    AuthenticatedSettingsRouteRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdministracaoIntegracoesRoute: typeof AuthenticatedAdministracaoIntegracoesRoute
   AuthenticatedAdministracaoRegrasRoute: typeof AuthenticatedAdministracaoRegrasRoute
@@ -626,7 +484,6 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdministracaoIntegracoesRoute:
     AuthenticatedAdministracaoIntegracoesRoute,

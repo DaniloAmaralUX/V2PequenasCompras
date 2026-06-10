@@ -1,5 +1,4 @@
 import { Telescope } from 'lucide-react'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -21,7 +20,6 @@ export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
         <h1 className='text-base font-medium'>{title}</h1>
         <div className='ms-auto flex items-center gap-2'>
           <ThemeSwitch />
-          <ConfigDrawer />
           <ProfileDropdown />
         </div>
       </Header>
