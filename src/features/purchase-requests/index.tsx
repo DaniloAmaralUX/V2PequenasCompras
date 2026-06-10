@@ -6,7 +6,6 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { RequestsTable } from './components/requests-table'
 import { useRequests } from './data/use-requests'
@@ -17,7 +16,7 @@ export function PurchaseRequests() {
   return (
     <PageTransition>
       <Header fixed>
-        <Search className='me-auto' />
+        <div className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />

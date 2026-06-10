@@ -15,7 +15,6 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { PageTransition } from '@/components/layout/page-transition'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { StatusBadge } from '@/features/purchase-requests/components/status-badge'
 import { formatBRL } from '@/features/purchase-requests/lib/format'
@@ -29,7 +28,7 @@ export function Dashboard() {
   return (
     <PageTransition>
       <Header fixed>
-        <Search className='me-auto' />
+        <div className='me-auto' />
         <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />
